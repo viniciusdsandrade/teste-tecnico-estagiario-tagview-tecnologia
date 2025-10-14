@@ -15,12 +15,12 @@ tags:
 
 # Segurança GLOBAL (evita repetir em cada operação)
 security:
-  - ApiKeyAuth: [ ]
+  - ApiKeyAuth: []
 
 paths:
   /api/v1/produtos:
     get:
-      tags: [ Produtos ]
+      tags: [Produtos]
       summary: Listagem de produtos
       operationId: listProdutos
       parameters:
@@ -36,7 +36,7 @@ paths:
                 items: { $ref: '#/components/schemas/Produto' }
               examples:
                 vazio:
-                  value: [ ]
+                  value: []
                 exemplo:
                   value:
                     - id: "9e1a1f29-4e9f-4a3e-96a5-2d3f1d3e6b10"
@@ -48,7 +48,7 @@ paths:
         '500': { $ref: '#/components/responses/ServerError500' }
 
     post:
-      tags: [ Produtos ]
+      tags: [Produtos]
       summary: Criação de produto
       operationId: createProduto
       requestBody:
@@ -81,13 +81,13 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Erros' }
               example:
-                erros: [ "nome: mínimo 3", "preco: mínimo 10", "descricao: mínimo 30" ]
+                erros: ["nome: mínimo 3", "preco: mínimo 10", "descricao: mínimo 30"]
         '401': { $ref: '#/components/responses/Unauthorized401' }
         '500': { $ref: '#/components/responses/ServerError500' }
 
   /api/v1/produtos/importacao:
     post:
-      tags: [ Produtos ]
+      tags: [Produtos]
       summary: Importação de produtos via CSV
       description: >
         Recebe arquivo .csv (até 10MB) com cabeçalho flexível.
@@ -99,7 +99,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [ file ]
+              required: [file]
               properties:
                 file:
                   type: string
@@ -115,14 +115,14 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Erros' }
               example:
-                erros: [ "Arquivo maior do que 10Mb", "Arquivo recebido não é CSV" ]
+                erros: ["Arquivo maior do que 10Mb", "Arquivo recebido não é CSV"]
         '422':
           description: Erros por linha no CSV
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Erros' }
               example:
-                erros: [ "Erro na linha 2: nome", "Erro na linha 10: nome, imagem" ]
+                erros: ["Erro na linha 2: nome", "Erro na linha 10: nome, imagem"]
         '401': { $ref: '#/components/responses/Unauthorized401' }
         '500': { $ref: '#/components/responses/ServerError500' }
 
@@ -150,7 +150,7 @@ components:
       required: false
       schema:
         type: integer
-        enum: [ 10, 20, 50, 0 ]
+        enum: [10, 20, 50, 0]
         default: 10
 
   responses:
@@ -198,4 +198,4 @@ components:
         erros:
           type: array
           items: { type: string }
-      required: [ erros ]
+      required: [erros]

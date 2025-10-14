@@ -1,4 +1,5 @@
-# app/models/product.rb
+# frozen_string_literal: true
+
 require 'securerandom'
 require 'base64'
 
@@ -18,6 +19,7 @@ class Product < ApplicationRecord
 
   def validate_imagem_if_present
     return if imagem.blank?
+
     unless imagem.start_with?('data:image/png;base64,') || imagem.start_with?('data:image/jpeg;base64,')
       errors.add(:imagem, 'deve ser PNG ou JPG codificado em data URL base64'); return
     end
@@ -26,5 +28,3 @@ class Product < ApplicationRecord
     errors.add(:imagem, 'maior que 2MB') if size_bytes > 2.megabytes
   end
 end
-
-

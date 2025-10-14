@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     class ProductsController < ApplicationController
@@ -5,14 +7,14 @@ module Api
 
       # GET /api/v1/produtos
       def index
-        per_page = normalized_limit(params[:limit]) # 10/20/50/:all
+        per_page = normalized_limit(params[:limit])
         page = params[:page].to_i <= 0 ? 1 : params[:page].to_i
 
         scope = Product.order(created_at: :desc)
         scope = scope.limit(per_page).offset((page - 1) * per_page) unless per_page == :all
 
         render json: scope.map { |p| product_json(p) }, status: :ok
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error(e.full_message)
         render json: { erros: ['Erro interno no servidor'] }, status: :internal_server_error
       end
@@ -25,7 +27,7 @@ module Api
         else
           render json: { erros: product.errors.full_messages }, status: :unprocessable_entity
         end
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error(e.full_message)
         render json: { erros: ['Erro interno no servidor'] }, status: :internal_server_error
       end
@@ -35,9 +37,7 @@ module Api
         file = params[:file]
         return render json: { erros: ['Arquivo não enviado'] }, status: :bad_request unless file
 
-        unless csv_file?(file)
-          return render json: { erros: ['Arquivo recebido não é CSV'] }, status: :bad_request
-        end
+        return render json: { erros: ['Arquivo recebido não é CSV'] }, status: :bad_request unless csv_file?(file)
         if file.size.to_i > 10 * 1024 * 1024
           return render json: { erros: ['Arquivo maior do que 10Mb'] }, status: :bad_request
         end
@@ -63,8 +63,9 @@ module Api
         end
 
         return render json: { erros: errors }, status: :unprocessable_entity if errors.present?
+
         head :ok
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error(e.full_message)
         render json: { erros: ['Erro interno no servidor'] }, status: :internal_server_error
       end
@@ -90,10 +91,13 @@ module Api
 
       def normalized_limit(raw)
         return 10 if raw.blank?
+
         str = raw.to_s.downcase
-        return :all if str == 'all' || str == 'todos'
+        return :all if %w[all todos].include?(str)
+
         val = str.to_i
         return 10 unless [10, 20, 50].include?(val)
+
         val
       end
 

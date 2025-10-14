@@ -1,4 +1,5 @@
-# config/routes.rb
+# frozen_string_literal: true
+# 
 Rails.application.routes.draw do
   mount Rswag::Ui::Engine  => '/api-docs'
   mount Rswag::Api::Engine => '/api-docs'
@@ -12,5 +13,6 @@ Rails.application.routes.draw do
   end
 
   # Qualquer outra rota -> 404 plain (frontend exigirá isso; aqui respondemos JSON)
-  match '*unmatched', to: proc { [404, { 'Content-Type' => 'application/json' }, [{ erro: 'Oooops. Essa página não existe.' }.to_json]] }, via: :all
+  match '*unmatched', to: proc {
+ [404, { 'Content-Type' => 'application/json' }, [{ erro: 'Oooops. Essa página não existe.' }.to_json]] }, via: :all
 end
