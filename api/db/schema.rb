@@ -10,6 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 0) do
+ActiveRecord::Schema.define(version: 2025_10_14_000210) do
+
+  create_table "products", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "nome", limit: 50, null: false
+    t.decimal "preco", precision: 12, scale: 2, null: false
+    t.text "imagem", size: :medium
+    t.string "descricao", null: false
+    t.string "uuid", limit: 36, null: false
+    t.index ["uuid"], name: "index_products_on_uuid", unique: true
+  end
 
 end

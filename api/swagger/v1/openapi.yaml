@@ -1,0 +1,201 @@
+openapi: 3.0.3
+info:
+  title: TagProducts API
+  version: "1.0"
+  description: >
+    API de produtos (GET/POST e importação CSV). Todas as rotas aplicam
+    delay artificial de ~3s no backend.
+
+servers:
+  - url: http://localhost:4000
+
+tags:
+  - name: Produtos
+    description: Operações de listagem, criação e importação.
+
+# Segurança GLOBAL (evita repetir em cada operação)
+security:
+  - ApiKeyAuth: [ ]
+
+paths:
+  /api/v1/produtos:
+    get:
+      tags: [ Produtos ]
+      summary: Listagem de produtos
+      operationId: listProdutos
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Lista de produtos (pode ser vazia)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Produto' }
+              examples:
+                vazio:
+                  value: [ ]
+                exemplo:
+                  value:
+                    - id: "9e1a1f29-4e9f-4a3e-96a5-2d3f1d3e6b10"
+                      nome: "Teclado Mecânico"
+                      preco: 199.9
+                      imagem: null
+                      descricao: "Teclado com switches táteis; excelente para produtividade."
+        '401': { $ref: '#/components/responses/Unauthorized401' }
+        '500': { $ref: '#/components/responses/ServerError500' }
+
+    post:
+      tags: [ Produtos ]
+      summary: Criação de produto
+      operationId: createProduto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProdutoInput' }
+            examples:
+              ok:
+                value:
+                  nome: "Mouse Óptico"
+                  preco: 120
+                  imagem: null
+                  descricao: "Mouse leve e preciso (1000 DPI), ideal para uso diário."
+      responses:
+        '200':
+          description: Produto criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Produto' }
+              example:
+                id: "7b3b1c1a-0b3e-4d8b-9e4c-a1d2f3b4c5d6"
+                nome: "Mouse Óptico"
+                preco: 120
+                imagem: null
+                descricao: "Mouse leve e preciso (1000 DPI), ideal para uso diário."
+        '422':
+          description: Erros de validação
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Erros' }
+              example:
+                erros: [ "nome: mínimo 3", "preco: mínimo 10", "descricao: mínimo 30" ]
+        '401': { $ref: '#/components/responses/Unauthorized401' }
+        '500': { $ref: '#/components/responses/ServerError500' }
+
+  /api/v1/produtos/importacao:
+    post:
+      tags: [ Produtos ]
+      summary: Importação de produtos via CSV
+      description: >
+        Recebe arquivo .csv (até 10MB) com cabeçalho flexível.
+        A validação é a mesma do POST /api/v1/produtos (imagem opcional).
+      operationId: importProdutosCSV
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [ file ]
+              properties:
+                file:
+                  type: string
+                  format: binary
+            encoding:
+              file:
+                contentType: text/csv
+      responses:
+        '200': { description: Importação concluída }
+        '400':
+          description: Arquivo inválido (maior que 10MB e/ou não-CSV)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Erros' }
+              example:
+                erros: [ "Arquivo maior do que 10Mb", "Arquivo recebido não é CSV" ]
+        '422':
+          description: Erros por linha no CSV
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Erros' }
+              example:
+                erros: [ "Erro na linha 2: nome", "Erro na linha 10: nome, imagem" ]
+        '401': { $ref: '#/components/responses/Unauthorized401' }
+        '500': { $ref: '#/components/responses/ServerError500' }
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Número da página (>= 1). Default 1.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      description: Limite por página. `10`, `20`, `50` ou `0=Todos` (sem paginação).
+      required: false
+      schema:
+        type: integer
+        enum: [ 10, 20, 50, 0 ]
+        default: 10
+
+  responses:
+    Unauthorized401:
+      description: Unauthorized (missing or invalid API key)
+      # sem 'content' para representar corpo vazio
+    ServerError500:
+      description: Internal Server Error
+
+  schemas:
+    Produto:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nome: { type: string, example: "Teclado Mecânico" }
+        preco: { type: number, example: 199.9 }
+        imagem:
+          type: string
+          nullable: true
+          description: "Data URL base64 (png/jpg). Ex.: data:image/png;base64,...."
+        descricao:
+          type: string
+          example: "Teclado com switches táteis; excelente para produtividade."
+      required: [ id, nome, preco, descricao ]
+
+    ProdutoInput:
+      type: object
+      properties:
+        nome: { type: string, minLength: 3, maxLength: 50, example: "Teclado Mecânico" }
+        preco: { type: number, minimum: 10, example: 199.9 }
+        imagem:
+          type: string
+          nullable: true
+          description: "Data URL base64 (png/jpg). Máx 2MB (≈2.6MB base64)."
+        descricao:
+          type: string
+          minLength: 30
+          maxLength: 255
+          example: "Descrição longa o suficiente (≥30 chars) para passar na validação."
+      required: [ nome, preco, descricao ]
+
+    Erros:
+      type: object
+      properties:
+        erros:
+          type: array
+          items: { type: string }
+      required: [ erros ]
