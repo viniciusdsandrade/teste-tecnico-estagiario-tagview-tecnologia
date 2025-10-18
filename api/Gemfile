@@ -43,3 +43,5 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem "rswag-api", "~> 2.16"
 
 gem "rswag-ui", "~> 2.16"
+
+gem "rack-cors", "~> 2.0"

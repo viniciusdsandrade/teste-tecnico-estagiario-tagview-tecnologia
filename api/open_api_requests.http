@@ -1,0 +1,67 @@
+@base = http://localhost:3000
+@apiKey = tagview-desafio-2024
+
+###
+# LISTA paginada (10 por página)
+GET {{base}}/api/v1/produtos?limit=10&page=1
+X-API-KEY: {{apiKey}}
+Accept: application/json
+
+<> 2025-10-18T135150.200.json
+
+###
+# LISTA todos (útil para "achar" o recém-criado)
+GET {{base}}/api/v1/produtos?limit=all
+X-API-KEY: {{apiKey}}
+Accept: application/json
+
+###
+# CRIA um produto (válido segundo suas regras)
+# - nome: 3..50
+# - preco: >= 10
+# - descricao: >= 30
+# - imagem: opcional (data URL PNG/JPG) — aqui vai NULL
+POST {{base}}/api/v1/produtos
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nome": "Produto Exemplo",
+  "descricao": "Descrição do produto exemplo com mais de trinta caracteres.",
+  "preco": 99.99,
+  "imagem": null
+}
+
+###
+# CRIA um produto com IMAGEM (PNG 1x1 em data URL, bem pequena)
+POST {{base}}/api/v1/produtos
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nome": "Produto Exemplo com Imagem",
+  "descricao": "Outro exemplo com pelo menos trinta caracteres no texto.",
+  "preco": 199.90,
+  "imagem": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=="
+}
+
+###
+# IMPORTAÇÃO via CSV (multipart/form-data)
+# 1) Salve o CSV abaixo como ./produtos.csv
+# 2) Este bloco usa boundary manual + inclui o arquivo do disco
+#    Dica importante: no header, 'boundary=BOUNDARY' NÃO tem '--';
+#    mas nas linhas do corpo você usa '--BOUNDARY' para abrir/fechar.
+#    (Essa é a sintaxe correta do REST Client para multipart.)
+#    :contentReference[oaicite:1]{index=1}
+POST {{base}}/api/v1/produtos/importacao
+X-API-KEY: {{apiKey}}
+Content-Type: multipart/form-data; boundary=BOUNDARY
+
+--BOUNDARY
+Content-Disposition: form-data; name="file"; filename="produtos.csv"
+Content-Type: text/csv
+
+< ./produtos.csv
+--BOUNDARY--
