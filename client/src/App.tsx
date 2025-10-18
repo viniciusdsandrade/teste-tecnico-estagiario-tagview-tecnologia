@@ -1,35 +1,26 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import ProductsListPage from './pages/ProductsList';
+import ProductCreatePage from './pages/ProductCreate';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function NotFound() {
+    return <h2>Oooops. Essa página não existe.</h2>;
 }
 
-export default App
+export default function App() {
+    return (
+        <>
+            <nav className="topbar">
+                <Link to="/produtos/exibir">Exibir</Link>
+                <Link to="/produtos/cadastro">Cadastro</Link>
+            </nav>
+
+            <Routes>
+                <Route path="/" element={<Navigate to="/produtos/exibir" replace />} />
+                <Route path="/produtos/exibir" element={<ProductsListPage />} />
+                <Route path="/produtos/cadastro" element={<ProductCreatePage />} />
+                <Route path="*" element={<NotFound />} />
+            </Routes>
+        </>
+    );
+}
