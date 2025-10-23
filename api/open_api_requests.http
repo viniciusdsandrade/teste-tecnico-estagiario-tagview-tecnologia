@@ -1,5 +1,6 @@
 @base = http://localhost:3000
 @apiKey = tagview-desafio-2024
+@projectRoot = /home/andrade/Desktop/technical-test-intern-tagview-tecnologia/api
 
 ###
 # LISTA paginada (10 por página)
@@ -17,24 +18,20 @@ Accept: application/json
 
 ###
 # CRIA um produto (válido segundo suas regras)
-# - nome: 3..50
-# - preco: >= 10
-# - descricao: >= 30
-# - imagem: opcional (data URL PNG/JPG) — aqui vai NULL
 POST {{base}}/api/v1/produtos
 X-API-KEY: {{apiKey}}
 Content-Type: application/json
 Accept: application/json
 
 {
-  "nome": "Produto Exemplo",
+  "nome": "Apenas mais um produto",
   "descricao": "Descrição do produto exemplo com mais de trinta caracteres.",
   "preco": 99.99,
   "imagem": null
 }
 
 ###
-# CRIA um produto com IMAGEM (PNG 1x1 em data URL, bem pequena)
+# CRIA um produto com IMAGEM
 POST {{base}}/api/v1/produtos
 X-API-KEY: {{apiKey}}
 Content-Type: application/json
@@ -48,20 +45,14 @@ Accept: application/json
 }
 
 ###
-# IMPORTAÇÃO via CSV (multipart/form-data)
-# 1) Salve o CSV abaixo como ./produtos.csv
-# 2) Este bloco usa boundary manual + inclui o arquivo do disco
-#    Dica importante: no header, 'boundary=BOUNDARY' NÃO tem '--';
-#    mas nas linhas do corpo você usa '--BOUNDARY' para abrir/fechar.
-#    (Essa é a sintaxe correta do REST Client para multipart.)
-#    :contentReference[oaicite:1]{index=1}
+# IMPORTAÇÃO por CSV (multipart)
 POST {{base}}/api/v1/produtos/importacao
 X-API-KEY: {{apiKey}}
-Content-Type: multipart/form-data; boundary=BOUNDARY
+Content-Type: multipart/form-data; boundary=BOUND
 
---BOUNDARY
+--BOUND
 Content-Disposition: form-data; name="file"; filename="produtos.csv"
 Content-Type: text/csv
 
 < ./produtos.csv
---BOUNDARY--
+--BOUND--
