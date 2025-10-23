@@ -4,8 +4,9 @@ import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {fileToDataUrl} from '../utils/file';
 import {createProduct} from '../api/products';
-import type {Product} from '../types';
+import type {ApiError, Product} from '../types';
 import {useNavigate} from 'react-router-dom';
+import axios from "axios";
 
 const schema = z.object({
     nome: z.string().min(3, 'Mínimo 3 caracteres').max(50, 'Máximo 50 caracteres'),
@@ -19,20 +20,19 @@ const schema = z.object({
         .refine((f) => !f || f.length === 0 || ['image/png', 'image/jpeg'].includes(f[0].type), 'Apenas PNG ou JPG'),
 });
 
-// Tipos corretos para resolver: input vs output do Zod
-type FormInput = z.input<typeof schema>;   // preco pode vir como string/unknown (antes do coerce)
-type FormData  = z.output<typeof schema>;  // preco: number (após o coerce)
+type FormInput = z.input<typeof schema>;
+type FormData = z.output<typeof schema>;
 
 export default function ProductCreatePage() {
     const navigate = useNavigate();
     const [serverErrors, setServerErrors] = useState<string[]>([]);
-    // NOTE: alinhar generics do RHF com o zodResolver (<Input, any, Output>)
     const {register, handleSubmit, formState: {errors, isSubmitting}} =
-        useForm<FormInput, any, FormData>({ resolver: zodResolver(schema) });
+        useForm<FormInput, undefined, FormData>({resolver: zodResolver(schema)})
+
 
     async function onSubmit(data: FormData) {
         setServerErrors([]);
-        const fileList: FileList | undefined = (data.imagem as any) ?? undefined;
+        const fileList: FileList | undefined = (data.imagem as never) ?? undefined;
         const file = fileList?.[0];
         const imagem: string | null = file ? await fileToDataUrl(file) : null;
 
@@ -46,11 +46,20 @@ export default function ProductCreatePage() {
         try {
             const created = await createProduct(payload);
             navigate(`/produtos/exibir?idProduto=${created.id}`, {state: {message: 'Novo Produto Cadastrado!'}});
-        } catch (e: any) {
-            if (e?.response?.status === 422 && Array.isArray(e.response.data?.erros)) {
-                setServerErrors(e.response.data.erros);
-            } else if (e?.response?.status === 401) {
-                setServerErrors(['Não autorizado (X-API-KEY ausente ou inválida).']);
+        } catch (err: unknown) {
+            if (axios.isAxiosError<ApiError>(err)) {
+                const status = err.response?.status;
+                const erros = err.response?.data?.erros;
+
+                if (status === 422 && Array.isArray(erros)) {
+                    setServerErrors(erros);
+                } else if (status === 401) {
+                    setServerErrors(['Não autorizado (X-API-KEY ausente ou inválida).']);
+                } else {
+                    setServerErrors([err.message || 'Erro inesperado ao cadastrar. Tente novamente.']);
+                }
+            } else if (err instanceof Error) {
+                setServerErrors([err.message]);
             } else {
                 setServerErrors(['Erro inesperado ao cadastrar. Tente novamente.']);
             }
