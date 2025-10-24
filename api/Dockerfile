@@ -15,7 +15,6 @@ ENV RAILS_ENV=production \
 
 WORKDIR /app
 
-# Dependências nativas para compilar gems (ex.: mysql2)
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
       build-essential \
       default-libmysqlclient-dev \
@@ -25,7 +24,6 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
 
-# Copia a aplicação
 COPY . ./
 
 EXPOSE 3000
